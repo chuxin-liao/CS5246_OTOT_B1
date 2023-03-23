@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!-- saved from url=(0038)file:///Users/chuxin/Downloads/b1.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>Nightingale's Rose Diagram</title>
+  <script src="./b1-copy_files/d3.v5.min.js"></script>
+</head>
+<body>
+  <h2> Singapore Households Consumption Expenditure during 2013-2022 (in Million Dollars) </h2>
+  <svg width="1000" height="1000"></svg>
+  <script>
+    d3.json("data.json").then(function(data) {
+
+
+      data = data.sort((d1, d2) => d2.value - d1.value)
+
+      // Set the dimensions and margins of the graph
+      const margin = {top: 0, right: 30, bottom: 30, left: 40},
+            width = 1000 - margin.left - margin.right,
+            height = 1000 - margin.top - margin.bottom;
+
+      // Append the svg object to the body of the page
+      const svg = d3.select("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                  .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      // Initialize the radius and angle scales
+      const radius = 400
+      const angle = d3.scaleLinear()
+                      .domain([2013, 2023])
+                      .range([0, 2 * Math.PI]);
+      const cat = ["Food & Beverages","Housing & Utilities","Education","Recreation & Culture"]
+      // Initialize the color scale
+      const color = d3.scaleOrdinal()
+                      .domain(cat)
+                      .range(["#92a8d1", "#034f84", "#bccad6","#b7d7e8"]);
+
+      // Create the arcs
+      const arcs = d3.arc()
+                    .innerRadius(0)
+                    .outerRadius(d => d.value/100)
+                    .startAngle((d, i) => angle(d.year))
+                    .endAngle((d, i) => angle( d.year+1))
+
+      // Add the arcs to the svg
+      svg.selectAll("path")
+          .data(data)
+          .enter()
+          .append("path")
+          .attr("d", arcs)
+          .attr("fill", d => color(d.consumption))
+          .attr("transform", "translate(" + radius + "," + radius + ")")
+
+      // Add the legend
+      const size = 20
+      svg.selectAll("rect")
+      .data(cat)
+      .join("rect")
+        .attr("x", 700)
+        .attr("y", function(d,i){ return 50 + i*(size+5)})
+        .attr("width", size)
+        .attr("height", size)
+        .style("fill", function(d){ return color(d)})
+
+      svg.selectAll("legend")
+      .data(cat)
+      .join("text")
+        .attr("x", 700 + size*1.2)
+        .attr("y", function(d,i){ return 50 + i*(size+5) + (size/2)})
+        .text(function(d){ return d})
+        .attr("text-anchor", "left")
+        .style("alignment-baseline", "middle")
+
+
+      // Add the labels
+      svg.selectAll("label")
+          .data(d3.range(2013, 2023))
+          .enter()
+          .append("text")
+          .attr("transform", (d, i) => {
+              const angleRad = (angle(d) + angle(d+1)) / 2;
+              const x = Math.sin(angleRad) * radius * 0.8 + radius;
+              const y = -Math.cos(angleRad) * radius * 0.8 + radius;
+              return "translate(" + x + "," + y + ")";
+          })
+          .attr("text-anchor", "middle")
+          .text(d => d);
+    })
+
+  </script>
+
+</body></html>
